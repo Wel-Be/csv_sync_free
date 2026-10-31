@@ -1,14 +1,14 @@
 {
-  "name": "家計簿 明細統合",
-  "short_name": "家計簿統合",
-  "description": "銀行・カードのCSV明細を、端末の中だけで統合する家計簿",
+  "name": "csvSync",
+  "short_name": "csvSync",
+  "description": "複数の明細をまとめて、家計簿に。CSVの内容は端末の中だけで処理します",
   "lang": "ja",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1d6f5f",
+  "theme_color": "#789486",
   "icons": [
     {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
     {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},

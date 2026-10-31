@@ -1,23 +1,53 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d6f5f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#789486"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://wel-be.goatcounter.com; connect-src https://wel-be.goatcounter.com; worker-src 'self'; manifest-src 'self'; form-action 'none'; base-uri 'none'">
-<title>家計簿 明細統合</title>
+<title>csvSync</title>
 <style>
-:root{color-scheme:light dark;--l:#8885;--a:#1d6f5f}
-body{font:14px/1.6 system-ui,"Hiragino Sans","Yu Gothic",sans-serif;max-width:1080px;margin:0 auto;padding:16px}
-h1{font-size:20px}h2{font-size:16px;margin:24px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--a)}h3{font-size:14px;margin:14px 0 4px}
-.b{border:1px solid var(--l);border-radius:4px;padding:8px;margin:6px 0}
-table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--l);padding:3px 6px;text-align:left;vertical-align:top}.n{text-align:right}
-button,select,input{font:inherit;padding:2px 6px;max-width:100%}button{cursor:pointer}
-.w{background:#e9b94033;border-left:4px solid #e9b940;padding:6px 10px;margin:6px 0}.m{opacity:.7;font-size:12px}.s{background:#1d6f5f22}.x{opacity:.5}.r{color:#c33}
-.g{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0}tr[data-mon]{cursor:pointer}
-@media(max-width:700px){body{padding:10px;font-size:15px}h1{font-size:18px}.g{flex-direction:column;gap:6px}.g label{display:flex;flex-direction:column;gap:2px}.g label:has(input[type=checkbox]){flex-direction:row;align-items:center}table{display:block;overflow-x:auto;white-space:nowrap}button,select,input{min-height:38px}input[type=checkbox]{min-height:0}}
+:root{color-scheme:light;--g:#789486;--gd:#587567;--gl:#eef3f0;--bg:#f7f6f3;--t:#2f3432;--m:#6f7673;--l:#e2e5e3;--o:#b15c1e;--ol:#fdf3e6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t);font:15px/1.65 system-ui,"Hiragino Sans","Yu Gothic",sans-serif;-webkit-text-size-adjust:100%}
+header{background:var(--g);color:#fff;border-radius:0 0 20px 20px;padding:16px 0 14px}
+.in,.wrap{max-width:720px;margin:0 auto;padding:0 14px}.wrap{padding-bottom:36px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{display:flex;align-items:center;gap:8px}
+h1{font-size:26px;margin:0}.sub{margin:6px 0 4px;font-size:16px}
+.priv{margin:2px 0;font-size:13px;display:flex;gap:6px;align-items:flex-start}.priv .ic{width:16px;height:16px;margin-top:3px}.priv2{margin:2px 0 0;font-size:12px;opacity:.88}
+.ic{width:20px;height:20px;flex:none}h2{font-size:17px;margin:0 0 10px;display:flex;align-items:center;gap:8px}h3{font-size:15px;margin:16px 0 4px}
+.card{background:#fff;border:1px solid var(--l);border-radius:16px;box-shadow:0 1px 4px #0000000f;padding:16px;margin:12px 0}
+.st{display:flex;gap:12px;align-items:center;background:var(--gl)}.stic{color:var(--gd)}.stic .ic{width:32px;height:32px}
+.num{width:26px;height:26px;border-radius:50%;background:var(--g);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+details.acc{padding:0}details.acc>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;font-weight:600;min-height:54px}
+summary::-webkit-details-marker{display:none}.acc .body{padding:0 16px 16px}
+.cnt{margin-left:auto;color:var(--m);font-weight:400;font-size:14px}.chev{margin-left:auto}.cnt+.chev{margin-left:8px}
+.chev::after{content:"›";font-size:22px;color:var(--m);display:inline-block;transition:transform .15s}details[open]>summary .chev::after{transform:rotate(90deg)}
+.pick{text-align:center}.pick .btn{width:100%;max-width:360px}.addrow{text-align:center;margin-top:10px}
+details.fi{border:1px solid var(--l);border-radius:12px;margin:8px 0}details.fi>summary{list-style:none;display:flex;gap:8px;align-items:center;padding:8px 12px;cursor:pointer;min-height:48px;flex-wrap:wrap}
+.fn{font-weight:600;overflow-wrap:anywhere;flex:1 1 100px}details.fi>summary button{margin-left:auto}.fb{padding:0 10px 10px}
+.tx{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--l)}.tx .nm{overflow-wrap:anywhere;font-weight:600}.tx .am{white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
+.tot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.tot>div{background:var(--gl);border-radius:12px;padding:10px 6px;text-align:center}.tot b{display:block;font-size:19px;overflow-wrap:anywhere}
+.save{display:grid;grid-template-columns:1fr 1fr;gap:12px}.save .btn{width:100%}
+.w{background:var(--ol);border-left:4px solid var(--o);padding:8px 12px;margin:8px 0;border-radius:6px}
+.m{color:var(--m);font-size:13px}.x{opacity:.55}.s{background:var(--gl)}.r{color:var(--o)}
+.b{border:1px solid var(--l);border-radius:10px;padding:10px;margin:8px 0}.g{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0}
+.tw{overflow-x:auto;max-width:100%}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--l);padding:6px 8px;text-align:left;vertical-align:top}.n{text-align:right}tr[data-mon]{cursor:pointer}tr[data-mon] td{white-space:nowrap}
+button,select,input{font:inherit;max-width:100%}button{cursor:pointer;border:1px solid #cfd5d2;background:#fff;color:var(--t);border-radius:8px;padding:6px 12px;min-height:38px}
+input,select{border:1px solid #cfd5d2;border-radius:8px;padding:6px 8px;min-height:38px;background:#fff;color:var(--t)}input[type=checkbox]{min-height:0}
+.btn{background:var(--g);color:#fff;border:0;border-radius:999px;padding:12px 22px;font-size:16px;font-weight:600;min-height:48px;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+.btn2{background:#fff;color:var(--gd);border:1px solid var(--g);border-radius:999px;padding:8px 18px;min-height:44px}
+.ghost{background:#ffffff26;color:#fff;border:1px solid #ffffff80;border-radius:999px;padding:6px 14px;min-height:36px;display:inline-flex;gap:6px;align-items:center}
+a{color:var(--gd)}.foot{text-align:center;margin:20px 0 4px;font-size:13px}.foot a{background:var(--gl);padding:8px 16px;border-radius:999px;text-decoration:none;display:inline-block}
+@media(max-width:700px){.g{flex-direction:column;gap:6px}.g label{display:flex;flex-direction:column;gap:2px}.g label:has(input[type=checkbox]){flex-direction:row;align-items:center}h1{font-size:23px}.tot b{font-size:15px}}
+@media(max-width:560px){.save{grid-template-columns:1fr}}
 </style></head><body>
-<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h1>家計簿 明細統合</h1><button id="reset">はじめから</button></div>
-<p class="m">CSVの内容は、このブラウザの中だけで処理され、保存もしません（閉じると消えます）。保存できるのは、「この形式を保存」で登録した、名前と列の指定だけです。アクセス数の集計のため、このページを開いたことが GoatCounter に送られます。アプリがCSVの内容を送信することはありません。</p>
-<h2>1. CSVを読み込む</h2>
-<input type="file" id="fi" accept=".csv,.txt,text/csv,text/plain,application/vnd.ms-excel" multiple>
-<div id="files"></div><div id="app"></div>
-<p class="m" style="text-align:center;margin:32px 0 8px"><a href="https://ofuse.me/f3a8ad6a" target="_blank" rel="noopener noreferrer">改善のアイディア・応援はこちら</a></p>
+<header><div class="in"><div class="top"><div class="brand"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z"/><path d="M8 20v-5M12 20v-8M16 20v-3"/></svg><h1>csvSync</h1></div><button id="reset" class="ghost"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.5-5.8M20 4v5h-5"/></svg>はじめから</button></div>
+<p class="sub">複数の明細をまとめて、家計簿に。</p>
+<p class="priv"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><span>CSVの内容は、このブラウザ内で処理され、外部に送信されません（閉じると消えます）。</span></p>
+<p class="priv2">アクセス数の集計のため、ページを開いたことだけが GoatCounter に送られます。保存されるのは、「この形式を保存」で登録した名前と列の指定だけです。</p></div></header>
+<div class="wrap"><section class="card st" id="status"></section>
+<section class="card" id="c1"><h2><span class="num">1</span><span id="c1i"></span>CSVを読み込む</h2>
+<input type="file" id="fi" hidden multiple accept=".csv,.txt,text/csv,text/plain,application/vnd.ms-excel">
+<div class="pick"><button class="btn" id="pick"><span id="pki"></span>CSVファイルを選択</button><p class="m">複数のファイルをまとめて選択できます</p></div>
+<div id="files"></div><div class="addrow"><button class="btn2" id="add">＋ ファイルを追加</button></div></section>
+<div id="app"></div>
+<p class="foot"><a href="https://ofuse.me/f3a8ad6a" target="_blank" rel="noopener noreferrer">改善のアイディア・応援はこちら</a></p></div>
 <script>
 const $=s=>document.querySelector(s),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),Y=n=>Math.round(n).toLocaleString('ja-JP');
 let F=[],ED={},AP={},RJ={},CT={},LK={},MON='';
@@ -63,7 +93,7 @@ function saveFmt(i,nm){const f=F[i],hi=f.hd?f.hi:-1,Hh=hi>=0?f.R[hi]:null,
  p={id:nm,type:f.type,mode:f.mode,flip:!!f.flip,h:f.hd?hi+1:0,nc:f.hd?Hh.length:f.nc,bi,grp:f.grp||'',c:{date:T(f.c.date),name:f.c.name?f.c.name.split('+').map(T):[],in:T(f.c.in),out:T(f.c.out),amt:T(f.c.amt),dir:T(f.c.dir)}};
  PR=PR.filter(x=>x.id!=nm);PR.push(p);const ok=saveFmts();f.pid=nm;f.acct=nm;f.warn='';f.msg=ok?'「'+nm+'」として保存しました。次回から、ファイル名に「'+nm+'」が入っていれば、自動で当てはめます。':'';return ok}
 function delFmt(nm){PR=PR.filter(x=>x.id!=nm);saveFmts();F.forEach(f=>{if(f.pid==nm)f.pid=''})}
-function resetAll(){F=[];ED={};AP={};RJ={};CT={};LK={};MON='';$('#fi').value='';render();scrollTo(0,0)}
+function resetAll(){OP={};F=[];ED={};AP={};RJ={};CT={};LK={};MON='';$('#fi').value='';render();scrollTo(0,0)}
 const isd=(r,j)=>{const p=pd((r||[])[j]);return!!(p.v||p.ny)};
 function addFile(name,buf){const f={name,buf,enc:'auto',type:'bank',acct:name.replace(/\.[^.]+$/,''),hr:null,pv:false,grp:'',pm:'',mode:'AB',flip:false,year:new Date().getFullYear(),pid:'',warn:'',c:{date:'',name:'',in:'',out:'',amt:'',dir:''}};
  F.push(f);const i=F.length-1;build(i);const p=detect(name);
@@ -76,7 +106,7 @@ function calc(){
   if(x.fi!=y.fi&&x.f.acct==y.f.acct&&x.card==y.card&&x.date==y.date&&x.a==y.a&&x.d==y.d&&x.name==y.name)C.push({k:'d|'+x.id+'|'+y.id,t:'d',a:x,b:y,ex:[y.id]});
   if(!x.card&&!y.card&&x.d!=y.d&&x.a==y.a&&x.a>0&&Math.abs(dy(x.date)-dy(y.date))<=3)C.push({k:'p|'+x.id+'|'+y.id,t:'p',a:x,b:y,ex:[x.id,y.id],same:x.f.acct==y.f.acct})}
  const X=new Set(),Cd=[];
- const G={};F.forEach(f=>{if(f.type=='card'&&f.ready){const k=gk(f);(G[k]=G[k]||{nm:f.grp||f.acct,pm:/^\d{4}-\d{2}$/.test(f.pm||'')?f.pm:'',ns:[]}).ns.push(f.acct)}});
+ const G={};F.forEach(f=>{if(!f.del&&f.type=='card'&&f.ready){const k=gk(f);(G[k]=G[k]||{nm:f.grp||f.acct,pm:/^\d{4}-\d{2}$/.test(f.pm||'')?f.pm:'',ns:[]}).ns.push(f.acct)}});
  Object.entries(G).forEach(([k,g])=>{const rs=V.filter(r=>r.card&&gk(r.f)==k),T=rs.reduce((s,r)=>s+(r.d=='out'?r.a:-r.a),0);Cd.push({k,nm:g.nm,pm:g.pm,names:g.ns,n:rs.length,T,m:B.filter(r=>r.d=='out'&&T>0&&r.a==T)})});
  Object.values(LK).forEach(id=>{if(by[id])X.add(id)});
  C.forEach(c=>{if(AP[c.k]){if(c.ex.some(id=>X.has(id)))c.cf=1;else c.ex.forEach(id=>X.add(id))}});
@@ -111,31 +141,48 @@ function fpanel(f,i){
 ${f.mode=='S'?`<label><input type="checkbox" ${at('flip')}${f.flip?' checked':''}> プラスの金額を出金（支出）として扱う</label>`:''}</div>
 <div class="g"><label>日付 ${cs('date')}</label><label>振込先・振込元 ${cs('name')}</label>${f.mode=='AB'?`<label>入金 ${cs('in')}</label><label>出金 ${cs('out')}</label>`:`<label>金額 ${cs('amt')}</label>`+(f.mode=='D'?`<label>入出金の区分 ${cs('dir')}</label>`:'')}</div>
 ${f.ready?`<div class="g"><button data-a="savefmt" data-i="${i}">この形式を保存</button><span class="m">名前と列の指定だけを、このブラウザに保存します（CSVの内容は保存しません）</span></div>`:'<div class="w">日付と金額の列を指定してください。</div>'}${pv(f,i)}</div>`}
+const IC={file:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 12h5M9.5 16h5"/>',warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',bal:'<path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-2.5 6a3 3 0 005 0zM19 8l-2.5 6a3 3 0 005 0z"/>',chart:'<path d="M5 20V11M12 20V5M19 20v-7"/>',dl:'<path d="M12 4v11M7.5 11L12 15.5 16.5 11M5 20h14"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',folder:'<path d="M3 7h6l2 2h10v10H3z"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'};
+const ic=k=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
+let OP={};
+function fitem(f,i){const fo=f.fo??(!f.ready||!!f.warn||!!f.err),st=f.err?'読み込みエラー':!f.ready?'列の指定が必要です':f.warn?'形式の確認が必要です':f.rows.length+'行を読み込み済み';
+ return`<details class="fi" data-fo="${i}"${fo?' open':''}><summary>${ic('file')}<span class="fn">${E(f.name)}</span><span class="m">${st}</span><button data-a="delf" data-i="${i}">削除</button></summary><div class="fb">${fpanel(f,i)}</div></details>`}
 function render(){
- $('#files').innerHTML=F.map(fpanel).join('');
- const S=calc();let h=`<h2>2. 要確認の行（${S.bad.length}件）</h2>`;
- h+=S.bad.length?`<p class="m">直すと合計に入ります。カードの「出金」は利用（支出）です。</p><table><tr><th>ファイル・行</th><th>日付</th><th>金額</th><th>入出金</th><th>名前</th><th></th></tr>${S.bad.map(r=>`<tr><td>${E(r.f.acct)} ${r.ln}行</td>
+ const S=calc(),nf=F.filter(f=>!f.del).length,nb=S.bad.length,wr=x=>x.replace(/<table>/g,'<div class="tw"><table>').replace(/<\/table>/g,'</table></div>'),op=(k,d)=>OP[k]??d;
+ $('#status').innerHTML=nf?`<span class="stic">${ic('ok')}</span><div><div class="m">現在の状況</div><b>${nf}ファイル読み込み済み</b><div>${nb?`<span class="r">${ic('warn')} 要確認の明細：${nb}件</span>`:'要確認の明細：なし'}</div></div>`:`<span class="stic">${ic('file')}</span><div><div class="m">現在の状況</div><b>CSV未読み込み</b></div>`;
+ $('#c1i').innerHTML=ic('file');$('#pki').innerHTML=ic('folder');
+ $('#files').innerHTML=wr(F.map((f,i)=>f.del?'':fitem(f,i)).join(''));
+ const acc=(k,d,n,icn,t,c,body)=>`<details class="card acc" data-ac="${k}"${op(k,d)?' open':''}><summary><span class="num">${n}</span>${ic(icn)}<span>${t}</span>${c}<span class="chev"></span></summary><div class="body">${body}</div></details>`,cn=n=>`<span class="cnt">${n}件</span>`;
+ // 2 要確認
+ const b2=nb?`<p class="m">直すと合計に入ります。カードの「出金」は利用（支出）です。</p><table><tr><th>ファイル・行</th><th>日付</th><th>金額</th><th>入出金</th><th>名前</th><th></th></tr>${S.bad.map(r=>`<tr><td>${E(r.f.acct)} ${r.ln}行</td>
 <td><input data-e="date" data-id="${r.id}" value="${E(r.date||'')}" placeholder="2026-10-19" size="11"></td>
 <td><input data-e="a" data-id="${r.id}" value="${r.a??''}" size="9"></td>
 <td><select data-e="d" data-id="${r.id}">${opt('','選択',r.d||'')}${opt('in','入金',r.d)}${opt('out','出金',r.d)}</select></td>
 <td><input data-e="name" data-id="${r.id}" value="${E(r.name)}" size="16"></td>
-<td><button data-a="ig" data-id="${r.id}">この行を無視する</button></td></tr>`).join('')}</table>`:'<p class="m">なし</p>';
- h+=`<h2>3. 相殺・重複の候補</h2><p class="m">「合計から除く」を選んだものだけが、合計から除かれます。選ばなかった行は、そのまま合計に入ります。</p>`;
- S.Cd.forEach(c=>{const l=S.by[LK[c.k]],g=E(c.k);h+=`<div class="b"><b>カード「${c.names.map(E).join('・')}」</b>（引き落とし名：${E(c.nm)}${c.pm?'、引き落とし月：'+c.pm:''}）利用合計 ${Y(c.T)}円（${c.n}件、返金を引いた額）<br>`;
-  if(l)h+=`✔ この出金を合計から除いています：${rt(l)}${l.a!=c.T?` <span class="r">（利用合計と${Y(Math.abs(l.a-c.T))}円違います）</span>`:''} ${c.pm&&l.date.slice(0,7)!=c.pm?'<br><span class="r">入力した引き落とし月と、選んだ出金の月が違います。入力した月で集計します。</span>':''} <button data-a="unlk" data-g="${g}">除くのをやめる</button>`;
-  else{h+=c.pm?(c.m.length?`<div class="w">引き落とし月 ${c.pm} で集計しています。銀行側に同じ金額の出金があります。「合計から除く」を選ばないと、二重に数えます。</div>`:`<div class="m">引き落とし月 ${c.pm} で集計しています。</div>`):'';h+=c.m.length?c.m.map(m=>{const k='c|'+c.k+'|'+m.id,r=RJ[k];return`<div class="${r?'x':''}">候補：${rt(m)} ${r?`そのまま合計に入れています <button data-a="rj" data-k="${E(k)}">もう一度候補にする</button>`:`<button data-a="lk" data-g="${g}" data-id="${m.id}">合計から除く</button> <button data-a="rj" data-k="${E(k)}">そのまま合計に入れる</button>`}</div>`}).join(''):'<div class="m">同じ金額の出金は見つかりません。</div>';
-   h+=`<div class="m">「合計から除く」を選ぶと、その出金は合計から除かれ、カードの利用明細が、その引き落とし日の月に入ります。</div><div>金額が合わない場合：<select data-a="sel" data-g="${g}">${opt('','（銀行の出金を選ぶ）','')}${S.B.filter(r=>r.d=='out'&&!S.X.has(r.id)).map(r=>opt(r.id,`${r.date} ${r.f.acct} ${r.name} ${Y(r.a)}円`,'')).join('')}</select></div>`}
-  h+='</div>'});
- h+=S.C.length?`<table><tr><th>種類</th><th>内容</th><th></th></tr>${S.C.map(c=>{const a=AP[c.k],r=RJ[c.k],ty=CT[c.k]||'m';return`<tr class="${r?'x':''}"><td>${c.t=='d'?'重複':c.same?'キャッシュバック':`<select data-a="ct" data-k="${c.k}">${opt('m','自己資金の移動',ty)}${opt('c','キャッシュバック',ty)}</select>`}</td><td>${rt(c.a)}<br>${rt(c.b)}${c.t=='d'?'<br><span class="m">「合計から除く」を選ぶと、下の行だけを除きます</span>':''}${c.cf?'<br><span class="r">ほかの「合計から除く」と行が重なっているため反映されません</span>':''}</td><td>${a?`✔ 合計から除いています <button data-a="ap" data-k="${c.k}">除くのをやめる</button>`:r?`そのまま合計に入れています <button data-a="rj" data-k="${c.k}">もう一度候補にする</button>`:`<button data-a="ap" data-k="${c.k}">合計から除く</button> <button data-a="rj" data-k="${c.k}">そのまま合計に入れる</button>`}</td></tr>`}).join('')}</table>`:'<p class="m">移動・キャッシュバック・重複の候補はありません。</p>';
+<td><button data-a="ig" data-id="${r.id}">この行を無視する</button></td></tr>`).join('')}</table>`:'<p class="m">確認が必要な明細はありません。</p>';
+ // 3 相殺・重複
+ let cb='';
+ S.Cd.forEach(c=>{const l=S.by[LK[c.k]],g=E(c.k);cb+=`<div class="b"><b>カード「${c.names.map(E).join('・')}」</b>（引き落とし名：${E(c.nm)}${c.pm?'、引き落とし月：'+c.pm:''}）利用合計 ${Y(c.T)}円（${c.n}件、返金を引いた額）<br>`;
+  if(l)cb+=`✔ この出金を合計から除いています：${rt(l)}${l.a!=c.T?` <span class="r">（利用合計と${Y(Math.abs(l.a-c.T))}円違います）</span>`:''}${c.pm&&l.date.slice(0,7)!=c.pm?'<br><span class="r">入力した引き落とし月と、選んだ出金の月が違います。入力した月で集計します。</span>':''} <button data-a="unlk" data-g="${g}">除くのをやめる</button>`;
+  else{cb+=c.pm?(c.m.length?`<div class="w">引き落とし月 ${c.pm} で集計しています。銀行側に同じ金額の出金があります。「合計から除く」を選ばないと、二重に数えます。</div>`:`<div class="m">引き落とし月 ${c.pm} で集計しています。</div>`):'';
+   cb+=c.m.length?c.m.map(m=>{const k='c|'+c.k+'|'+m.id,r=RJ[k];return`<div class="${r?'x':''}">候補：${rt(m)} ${r?`そのまま合計に入れています <button data-a="rj" data-k="${E(k)}">もう一度候補にする</button>`:`<button data-a="lk" data-g="${g}" data-id="${m.id}">合計から除く</button> <button data-a="rj" data-k="${E(k)}">そのまま合計に入れる</button>`}</div>`}).join(''):'<div class="m">同じ金額の出金は見つかりません。</div>';
+   cb+=`<div class="m">「合計から除く」を選ぶと、その出金は合計から除かれ、カードの利用明細が、その引き落とし日の月に入ります。</div><div>金額が合わない場合：<select data-a="sel" data-g="${g}">${opt('','（銀行の出金を選ぶ）','')}${S.B.filter(r=>r.d=='out'&&!S.X.has(r.id)).map(r=>opt(r.id,`${r.date} ${r.f.acct} ${r.name} ${Y(r.a)}円`,'')).join('')}</select></div>`}
+  cb+='</div>'});
+ const ct=L=>L.length?`<table><tr><th>種類</th><th>内容</th><th></th></tr>${L.map(c=>{const a=AP[c.k],r=RJ[c.k],ty=CT[c.k]||'m';return`<tr class="${r?'x':''}"><td>${c.t=='d'?'重複':c.same?'キャッシュバック':`<select data-a="ct" data-k="${c.k}">${opt('m','自己資金の移動',ty)}${opt('c','キャッシュバック',ty)}</select>`}</td><td>${rt(c.a)}<br>${rt(c.b)}${c.t=='d'?'<br><span class="m">「合計から除く」を選ぶと、下の行だけを除きます</span>':''}${c.cf?'<br><span class="r">ほかの「合計から除く」と行が重なっているため反映されません</span>':''}</td><td>${a?`✔ 合計から除いています <button data-a="ap" data-k="${c.k}">除くのをやめる</button>`:r?`そのまま合計に入れています <button data-a="rj" data-k="${c.k}">もう一度候補にする</button>`:`<button data-a="ap" data-k="${c.k}">合計から除く</button> <button data-a="rj" data-k="${c.k}">そのまま合計に入れる</button>`}</td></tr>`}).join('')}</table>`:'<p class="m">候補はありません。</p>';
+ const nc=S.C.length+S.Cd.reduce((x,c)=>x+c.m.length,0);
+ const b3=`<p class="m">「合計から除く」を選んだものだけが、合計から除かれます。選ばなかった行は、そのまま合計に入ります。</p><h3>口座間の移動・キャッシュバック</h3><p class="m">自分の口座どうしのお金の移動や、手数料のキャッシュバックの可能性がある組です。</p>${ct(S.C.filter(c=>c.t=='p'))}<h3>重複の可能性</h3><p class="m">同じ明細を、2回読み込んでいる可能性がある行です。</p>${ct(S.C.filter(c=>c.t=='d'))}${S.Cd.length?'<h3>カードの引き落とし</h3>'+cb:''}`;
+ // 4 集計
  const ms=Object.keys(S.M).sort();if(!S.M[MON])MON=ms[ms.length-1]||'';
- const nb=S.bad.length+S.pend.length,ab=[...S.bad,...S.pend].reduce((s,r)=>s+(r.a||0),0);
- h+=`<h2>4. 月ごとの集計</h2>`+(nb?`<div class="w">合計に入っていない行が${nb}件（${Y(ab)}円分）あります。</div>`:'');
- h+=ms.length?`<table><tr><th>月（クリックで明細）</th><th class="n">入金合計</th><th class="n">支出合計</th><th class="n">収支</th></tr>${ms.map(m=>{const t=S.M[m];return`<tr data-mon="${m}" class="${m==MON?'s':''}"><td>${m}</td><td class="n">${Y(t.i)}</td><td class="n">${Y(t.e)}</td><td class="n">${Y(t.i-t.e)}</td></tr>`}).join('')}</table>`:'<p class="m">集計できるデータがありません。</p>';
- if(S.pend.length){const g={};S.pend.forEach(r=>(g[r.fi]=g[r.fi]||[]).push(r));h+=`<h3>月が確定していない分（引き落とし月が未入力で、引き落としも未確定のカード明細）</h3>`+Object.entries(g).map(([i,rs])=>`<details><summary>カード「${E(F[i].acct)}」 ${rs.length}件 / ${Y(rs.reduce((s,r)=>s+(r.d=='out'?r.a:-r.a),0))}円</summary>${rs.map(r=>`<div>${r.date} ${E(r.name)} ${r.d=='out'?'':'（返金）'}${Y(r.a)}円</div>`).join('')}</details>`).join('')}
- if(MON){const rs=S.inc.filter(r=>r.mo==MON).sort((a,b)=>a.date.localeCompare(b.date));h+=`<h3>${MON} の明細（${rs.length}件）</h3><table><tr><th>日付</th><th class="n">入金</th><th class="n">支出</th><th>振込先・振込元</th><th>口座</th></tr>${rs.map(r=>`<tr><td>${r.date}</td><td class="n">${r.inc?Y(r.inc):''}</td><td class="n">${r.exp?Y(r.exp):''}</td><td>${E(r.name)}</td><td>${E(r.f.acct)}${r.card?' <span class="m">（カード利用日）</span>':''}</td></tr>`).join('')}</table>`}
- const ig=S.all.filter(r=>r.ig);if(ig.length)h+=`<h3>無視した行</h3>`+ig.map(r=>`<div class="m">${E(r.f.acct)} ${r.ln}行 ${r.date||''} ${E(r.name)} ${r.a??''} <button data-a="uig" data-id="${r.id}">戻す</button></div>`).join('');
- h+=`<h2>5. 保存する</h2><p class="m">相殺した行と無視した行は出力されません。「要確認」のまま残った行は明細に含まれます。</p><button data-a="ex1">明細CSV</button> <button data-a="ex2">月ごとの合計CSV</button><div id="out"></div><h2>6. 保存した形式（${PR.length}件）</h2>${PR.length?`<table><tr><th>名前</th><th>種類</th><th>見出し行</th><th></th></tr>${PR.map(p=>`<tr><td>${E(p.id)}</td><td>${p.type=='card'?'カード':'銀行'}</td><td>${p.h?p.h+'行目':'なし'}</td><td><button data-a="delfmt" data-id="${E(p.id)}">削除</button></td></tr>`).join('')}</table>`:'<p class="m">まだありません。列を指定したあと「この形式を保存」を押すと、ここに追加されます。</p>'}`;
- $('#app').innerHTML=h}
+ const nx=S.bad.length+S.pend.length,ab=[...S.bad,...S.pend].reduce((x,r)=>x+(r.a||0),0);
+ let b4=nx?`<div class="w">合計に入っていない行が${nx}件（${Y(ab)}円分）あります。</div>`:'';
+ if(ms.length){const t=S.M[MON];b4+=`<h3>${MON}</h3><div class="tot"><div><span class="m">収入合計</span><b>${Y(t.i)}円</b></div><div><span class="m">支出合計</span><b>${Y(t.e)}円</b></div><div><span class="m">差引額</span><b>${Y(t.i-t.e)}円</b></div></div><p class="m">月の行を選ぶと、その月の明細が表示されます。</p><table><tr><th>月</th><th class="n">入金合計</th><th class="n">支出合計</th><th class="n">収支</th></tr>${ms.map(m=>{const t=S.M[m];return`<tr data-mon="${m}" class="${m==MON?'s':''}"><td>${m}</td><td class="n">${Y(t.i)}</td><td class="n">${Y(t.e)}</td><td class="n">${Y(t.i-t.e)}</td></tr>`}).join('')}</table>`}else b4+='<p class="m">集計できるデータがありません。</p>';
+ if(S.pend.length){const g={};S.pend.forEach(r=>(g[r.fi]=g[r.fi]||[]).push(r));b4+=`<h3>月が確定していない分（引き落とし月が未入力で、引き落としも未確定のカード明細）</h3>`+Object.entries(g).map(([i,rs])=>`<details><summary>カード「${E(F[i].acct)}」 ${rs.length}件 / ${Y(rs.reduce((x,r)=>x+(r.d=='out'?r.a:-r.a),0))}円</summary>${rs.map(r=>`<div>${r.date} ${E(r.name)} ${r.d=='out'?'':'（返金）'}${Y(r.a)}円</div>`).join('')}</details>`).join('')}
+ if(MON&&S.M[MON]){const rs=S.inc.filter(r=>r.mo==MON).sort((a,b)=>a.date.localeCompare(b.date));b4+=`<h3>${MON} の明細（${rs.length}件）</h3>${rs.map(r=>`<div class="tx"><div><div class="nm">${E(r.name)||'（名前なし）'}</div><div class="m">${r.date}・${E(r.f.acct)}${r.card?'（カード利用日）':''}</div></div><div class="am">${r.inc?'入金 '+Y(r.inc)+'円':'支出 '+Y(r.exp)+'円'}</div></div>`).join('')}`}
+ const ig=S.all.filter(r=>r.ig);if(ig.length)b4+=`<h3>無視した行</h3>`+ig.map(r=>`<div class="m">${E(r.f.acct)} ${r.ln}行 ${r.date||''} ${E(r.name)} ${r.a??''} <button data-a="uig" data-id="${r.id}">戻す</button></div>`).join('');
+ // 5 保存
+ const b5=`<div class="save"><div><button class="btn" data-a="ex1">${ic('dl')}明細CSVを保存</button><p class="m">1件ずつの明細（日付・入金・出金・振込先・振込元・口座名・ファイル名）</p></div><div><button class="btn" data-a="ex2">${ic('dl')}月ごとの合計CSVを保存</button><p class="m">月ごとの入金合計・支出合計・収支</p></div></div><p class="m">相殺した行と無視した行は、出力されません。「要確認」のまま残った行は、明細に含まれます。</p><div id="out"></div>`;
+ // 6 保存した形式
+ const b6=PR.length?`<table><tr><th>名前</th><th>種類</th><th>見出し行</th><th></th></tr>${PR.map(p=>`<tr><td>${E(p.id)}</td><td>${p.type=='card'?'カード':'銀行'}</td><td>${p.h?p.h+'行目':'なし'}</td><td><button data-a="delfmt" data-id="${E(p.id)}">削除</button></td></tr>`).join('')}</table><p class="m">形式を直すときは、同じ名前でもう一度「この形式を保存」を押すと、上書きされます。</p>`:'<p class="m">まだありません。列を指定したあと「この形式を保存」を押すと、ここに追加されます。</p>';
+ $('#app').innerHTML=wr(acc('c2',nb>0,2,'warn','要確認の明細',cn(nb),b2)+acc('c3',false,3,'bal','相殺・重複の候補',cn(nc),b3)+acc('c4',ms.length>0,4,'chart','月ごとの集計','',b4)+acc('c5',false,5,'dl','CSVを保存する','',b5)+acc('c6',false,6,'gear','保存した形式',cn(PR.length),b6))}
 const q=v=>{v=String(v??'');return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
 function dl(n,rows){const t=rows.map(r=>r.map(q).join(',')).join('\r\n');
  try{const u=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download=n;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},1000)}catch(_){}
@@ -144,12 +191,13 @@ function exp(k){const S=calc();
  if(k==1){const rs=S.live.filter(r=>!S.X.has(r.id)).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'));
   dl('明細.csv',[['日付','入金','出金','振込先・振込元','口座名','元のファイル名'],...rs.map(r=>{let i='',o='';if(r.a!=null&&r.d){if(r.card)o=r.d=='out'?r.a:-r.a;else if(r.d=='in')i=r.a;else o=r.a}return[r.date||'',i,o,r.name,r.f.acct,r.f.name]})])}
  else dl('月ごとの合計.csv',[['月','入金合計','支出合計','収支'],...Object.keys(S.M).sort().map(m=>[m,S.M[m].i,S.M[m].e,S.M[m].i-S.M[m].e])])}
-document.addEventListener('click',e=>{const t=e.target.closest('[data-a],[data-mon]');if(!t)return;const d=t.dataset,a=d.a,k=d.k,id=d.id,i=d.i;
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a],[data-mon]');if(!t)return;const d=t.dataset,a=d.a,k=d.k,id=d.id,i=d.i;if(a=='delf')e.preventDefault();
  if(d.mon)MON=d.mon;else if(a=='ap')AP[k]?delete AP[k]:AP[k]=1;else if(a=='rj')RJ[k]?delete RJ[k]:RJ[k]=1;
  else if(a=='lk')LK[d.g]=id;else if(a=='unlk')delete LK[d.g];
  else if(a=='ig')(ED[id]=ED[id]||{}).ig=1;else if(a=='uig')delete ED[id].ig;
  else if(a=='hr'||a=='hra'){F[i].hr=a=='hra'?null:+k;F[i].warn='';build(+i)}
  else if(a=='savefmt'){const f=F[i],nm=prompt('この形式の名前（銀行名・カード名）を入力してください。\nファイル名にこの名前が入っていると、次回から自動で当てはめます。',f.acct);if(nm===null)return;const n=nm.trim();if(!n)return alert('名前を入力してください。');if(PR.some(x=>x.id==n)&&!confirm('「'+n+'」はすでに保存されています。上書きしますか？'))return;saveFmt(+i,n)}
+ else if(a=='delf'){const f=F[i];if(!confirm('「'+f.name+'」の読み込みを取り消します（元のファイルは変わりません）。よろしいですか？'))return;f.del=true;f.rows=[];f.ready=false;Object.keys(ED).forEach(x=>{if(x.startsWith(i+':'))delete ED[x]})}
  else if(a=='delfmt'){if(!confirm('保存した形式「'+id+'」を削除します。よろしいですか？'))return;delFmt(id)}
  else if(a=='ex1')return exp(1);else if(a=='ex2')return exp(2);else return;
  render()});
@@ -166,6 +214,8 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
  else if(d.a=='ct')CT[d.k]=t.value;else return;
  render()});
 $('#reset').addEventListener('click',()=>{if(F.length&&!confirm('読み込んだCSVの内容を、すべて消して、はじめからにします。保存した形式は消えません。よろしいですか？'))return;resetAll()});
+$('#pick').addEventListener('click',()=>$('#fi').click());$('#add').addEventListener('click',()=>$('#fi').click());
+document.addEventListener('click',e=>{const sm=e.target.closest('summary');if(!sm||e.target.closest('[data-a]'))return;const dt=sm.parentElement,d=dt.dataset,nx=!dt.open;if(d.fo!==undefined)F[+d.fo].fo=nx;else if(d.ac)OP[d.ac]=nx});
 $('#fi').addEventListener('change',async e=>{for(const file of e.target.files)addFile(file.name,await file.arrayBuffer());e.target.value='';render()});
 render();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
