@@ -1,0 +1,174 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d6f5f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://wel-be.goatcounter.com; connect-src https://wel-be.goatcounter.com; worker-src 'self'; manifest-src 'self'; form-action 'none'; base-uri 'none'">
+<title>家計簿 明細統合</title>
+<style>
+:root{color-scheme:light dark;--l:#8885;--a:#1d6f5f}
+body{font:14px/1.6 system-ui,"Hiragino Sans","Yu Gothic",sans-serif;max-width:1080px;margin:0 auto;padding:16px}
+h1{font-size:20px}h2{font-size:16px;margin:24px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--a)}h3{font-size:14px;margin:14px 0 4px}
+.b{border:1px solid var(--l);border-radius:4px;padding:8px;margin:6px 0}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--l);padding:3px 6px;text-align:left;vertical-align:top}.n{text-align:right}
+button,select,input{font:inherit;padding:2px 6px;max-width:100%}button{cursor:pointer}
+.w{background:#e9b94033;border-left:4px solid #e9b940;padding:6px 10px;margin:6px 0}.m{opacity:.7;font-size:12px}.s{background:#1d6f5f22}.x{opacity:.5}.r{color:#c33}
+.g{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0}tr[data-mon]{cursor:pointer}
+@media(max-width:700px){body{padding:10px;font-size:15px}h1{font-size:18px}.g{flex-direction:column;gap:6px}.g label{display:flex;flex-direction:column;gap:2px}.g label:has(input[type=checkbox]){flex-direction:row;align-items:center}table{display:block;overflow-x:auto;white-space:nowrap}button,select,input{min-height:38px}input[type=checkbox]{min-height:0}}
+</style></head><body>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h1>家計簿 明細統合</h1><button id="reset">はじめから</button></div>
+<p class="m">CSVの内容は、このブラウザの中だけで処理され、保存もしません（閉じると消えます）。保存できるのは、「この形式を保存」で登録した、名前と列の指定だけです。アクセス数の集計のため、このページを開いたことが GoatCounter に送られます。アプリがCSVの内容を送信することはありません。</p>
+<h2>1. CSVを読み込む</h2>
+<input type="file" id="fi" accept=".csv,.txt,text/csv,text/plain,application/vnd.ms-excel" multiple>
+<div id="files"></div><div id="app"></div>
+<p class="m" style="text-align:center;margin:32px 0 8px"><a href="https://ofuse.me/f3a8ad6a" target="_blank" rel="noopener noreferrer">改善のアイディア・応援はこちら</a></p>
+<script>
+const $=s=>document.querySelector(s),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),Y=n=>Math.round(n).toLocaleString('ja-JP');
+let F=[],ED={},AP={},RJ={},CT={},LK={},MON='';
+const zn=s=>String(s??'').replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).replace(/／/g,'/').replace(/[－−ー‐]/g,'-').trim(),p2=n=>String(n).padStart(2,'0');
+function ok(y,m,d){const t=new Date(y,m-1,d);return t.getFullYear()==y&&t.getMonth()==m-1&&t.getDate()==d?y+'-'+p2(m)+'-'+p2(d):null}
+function pd(s){s=zn(s);let m;
+ if(m=s.match(/^(\d{4})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})日?$/))return{v:ok(+m[1],+m[2],+m[3])};
+ if(m=s.match(/^(\d{4})(\d{2})(\d{2})$/))return{v:ok(+m[1],+m[2],+m[3])};
+ if(m=s.match(/^(令和|平成|昭和|[RHS])(\d{1,2}|元)[年\/.\-](\d{1,2})[月\/.\-](\d{1,2})日?$/)){const b={令和:2018,R:2018,平成:1988,H:1988,昭和:1925,S:1925}[m[1]];return{v:ok(b+(m[2]=='元'?1:+m[2]),+m[3],+m[4])}}
+ if(m=s.match(/^(\d{2})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/))return{v:+m[1]<=12&&+m[2]<=12&&+m[3]<=12?null:ok(2000+ +m[1],+m[2],+m[3])};
+ if(m=s.match(/^(\d{1,2})[\/\-.月](\d{1,2})日?$/))return{ny:[+m[1],+m[2]]};
+ return{v:null}}
+function pa(s){s=zn(s).replace(/[,，¥￥円\s]/g,'').replace(/^[△▲]/,'-');if(s==='')return null;const n=Number(s);return isNaN(n)?null:n}
+function csv(t){let r=[],c=[],s='',q=0;for(let i=0;i<t.length;i++){const h=t[i];if(q){if(h=='"'){if(t[i+1]=='"'){s+='"';i++}else q=0}else s+=h}else if(h=='"')q=1;else if(h==','){c.push(s);s=''}else if(h=='\n'||h=='\r'){if(h=='\r'&&t[i+1]=='\n')i++;c.push(s);r.push(c);c=[];s=''}else s+=h}if(s||c.length){c.push(s);r.push(c)}return r.filter(x=>x.some(v=>v.trim()))}
+function dec(b,e){if(e=='auto'){try{return new TextDecoder('utf-8',{fatal:true}).decode(b)}catch(_){e='shift_jis'}}return new TextDecoder(e).decode(b)}
+function build(i){const f=F[i];f.err='';f.rows=[];let R;try{R=csv(dec(f.buf,f.enc))}catch(e){R=[];f.err='この文字コードでは読み取れません。別の文字コードを選んでください。'}
+ if(!R.length&&!f.err)f.err='空のファイルです。';
+ f.R=R;const hr=f.hr==null?(R[0]&&!R[0].some((c,j)=>isd(R[0],j)&&(R.length<2||isd(R[1],j)))?0:-1):f.hr;f.hi=hr;f.hd=hr>=0&&hr<R.length;f.off=f.hd?hr+1:0;
+ const D=f.D=f.hd?R.slice(hr+1):R;f.nc=Math.max(0,...R.map(r=>r.length));const c=f.c;
+ f.ready=c.date!==''&&(f.mode=='AB'?c.in!==''||c.out!=='':c.amt!==''&&(f.mode=='S'||c.dir!==''));if(!f.ready)return;
+ const ms=[];D.forEach(r=>{const p=pd(r[c.date]);if(p.ny)ms.push(p.ny[0])});const wr=ms.some(m=>m>=10)&&ms.some(m=>m<=3);
+ D.forEach((r,k)=>{const p=pd(r[c.date]);let date=p.v||null;if(p.ny)date=ok(+f.year+(wr&&p.ny[0]<=6?1:0),p.ny[0],p.ny[1]);
+  const g=x=>x===''?null:pa(r[x]);let a=null,d=null;
+  if(f.mode=='AB'){const x=g(c.in),y=g(c.out);if(x>0&&!(y>0)){a=x;d='in'}else if(y>0&&!(x>0)){a=y;d='out'}else if(x===0||y===0){a=0;d='in'}}
+  else{const v=g(c.amt);if(v!=null){a=Math.abs(v);if(f.mode=='S')d=(v>=0)!=f.flip?'in':'out';else{const t=zn(r[c.dir]);d=/入|受|預|収|貸|IN/i.test(t)?'in':/出|支|払|引|借|OUT/i.test(t)?'out':null}}}
+  f.rows.push({id:i+':'+k,fi:i,ln:k+f.off+1,date,a,d,name:c.name===''?'':c.name.split('+').map(x=>String(r[x]||'').trim()).filter(Boolean).join(' ')})});
+ if(f.rows.length&&f.rows.every(r=>!(r.date&&r.a!=null&&r.d)))f.err='日付や金額がほとんど読み取れません。列の指定を見直してください。'}
+const LS='kakeibo.formats.v1';
+function loadFmts(){try{const a=JSON.parse(localStorage.getItem(LS)||'[]');return Array.isArray(a)?a.filter(p=>p&&typeof p.id=='string'&&p.c&&Array.isArray(p.c.name)):[]}catch(_){return[]}}
+let PR=loadFmts();
+function saveFmts(){try{localStorage.setItem(LS,JSON.stringify(PR));return true}catch(_){alert('このブラウザでは、形式を保存できません。');return false}}
+const gk=f=>(f.grp||f.acct)+(/^\d{4}-\d{2}$/.test(f.pm||'')?'|'+f.pm:'');
+const nk=s=>s.normalize('NFKC').toLowerCase();
+function detect(n){n=nk(n);const m=PR.map(p=>({p,l:nk(p.id).length})).filter(x=>x.l&&n.includes(nk(x.p.id))).sort((a,b)=>b.l-a.l);return m.length&&(m.length==1||m[0].l>m[1].l)?m[0].p:null}
+function applyP(i,p){const f=F[i],c=p.c;f.pid=p.id;f.warn='';f.grp=p.grp||'';f.type=p.type;f.acct=p.id;f.mode=p.mode;f.flip=!!p.flip;f.hr=p.h>0?p.h-1:-1;f.c={date:'',name:'',in:'',out:'',amt:'',dir:''};
+ const H=p.h>0?(f.R[p.h-1]||[]).map(zn):[],ix=x=>p.bi?+x:H.indexOf(zn(x)),need=[c.date,...c.name,c.in,c.out,c.amt,c.dir].filter(x=>x!==''&&x!=null),miss=need.filter(x=>{const k=ix(x);return!(k>=0&&k<f.nc)});
+ if(miss.length||(p.h>0?H.length:f.nc)!=p.nc){f.warn='登録と形が違います（'+(miss.length&&!p.bi?'見つからない見出し：'+miss.join('、'):'列の数が違います')+'）。手動で列を指定してください。';return}
+ const g=x=>x===''||x==null?'':''+ix(x);f.c.date=g(c.date);f.c.name=c.name.map(ix).join('+');f.c.in=g(c.in);f.c.out=g(c.out);f.c.amt=g(c.amt);f.c.dir=g(c.dir)}
+function saveFmt(i,nm){const f=F[i],hi=f.hd?f.hi:-1,Hh=hi>=0?f.R[hi]:null,
+ used=[f.c.date,f.c.in,f.c.out,f.c.amt,f.c.dir,...(f.c.name?f.c.name.split('+'):[])].filter(x=>x!==''),
+ bi=!Hh||used.some(x=>{const t=zn(Hh[+x]??'');return!t||Hh.filter(y=>zn(y)==t).length!=1}),
+ T=x=>x===''?'':(bi?''+x:Hh[+x]),
+ p={id:nm,type:f.type,mode:f.mode,flip:!!f.flip,h:f.hd?hi+1:0,nc:f.hd?Hh.length:f.nc,bi,grp:f.grp||'',c:{date:T(f.c.date),name:f.c.name?f.c.name.split('+').map(T):[],in:T(f.c.in),out:T(f.c.out),amt:T(f.c.amt),dir:T(f.c.dir)}};
+ PR=PR.filter(x=>x.id!=nm);PR.push(p);const ok=saveFmts();f.pid=nm;f.acct=nm;f.warn='';f.msg=ok?'「'+nm+'」として保存しました。次回から、ファイル名に「'+nm+'」が入っていれば、自動で当てはめます。':'';return ok}
+function delFmt(nm){PR=PR.filter(x=>x.id!=nm);saveFmts();F.forEach(f=>{if(f.pid==nm)f.pid=''})}
+function resetAll(){F=[];ED={};AP={};RJ={};CT={};LK={};MON='';$('#fi').value='';render();scrollTo(0,0)}
+const isd=(r,j)=>{const p=pd((r||[])[j]);return!!(p.v||p.ny)};
+function addFile(name,buf){const f={name,buf,enc:'auto',type:'bank',acct:name.replace(/\.[^.]+$/,''),hr:null,pv:false,grp:'',pm:'',mode:'AB',flip:false,year:new Date().getFullYear(),pid:'',warn:'',c:{date:'',name:'',in:'',out:'',amt:'',dir:''}};
+ F.push(f);const i=F.length-1;build(i);const p=detect(name);
+ if(p)applyP(i,p);else{let g=-1,bt=0;for(let j=0;j<f.nc;j++){const n=f.D.slice(0,50).filter(r=>isd(r,j)).length;if(n>bt){bt=n;g=j}}if(g>=0)f.c.date=String(g)}build(i);f.pv=!p||!!f.warn||!f.ready;return i}
+function calc(){
+ const all=[];F.forEach(f=>(f.rows||[]).forEach(r=>{const e={...r,...ED[r.id]};e.f=f;e.card=f.type=='card';e.ok=!!(e.date&&e.a!=null&&e.d);all.push(e)}));
+ const live=all.filter(r=>!r.ig),V=live.filter(r=>r.ok),B=V.filter(r=>!r.card),by={};B.forEach(r=>by[r.id]=r);
+ const dy=s=>Date.parse(s)/864e5,C=[];
+ for(let i=0;i<V.length;i++)for(let j=i+1;j<V.length;j++){const x=V[i],y=V[j];
+  if(x.fi!=y.fi&&x.f.acct==y.f.acct&&x.card==y.card&&x.date==y.date&&x.a==y.a&&x.d==y.d&&x.name==y.name)C.push({k:'d|'+x.id+'|'+y.id,t:'d',a:x,b:y,ex:[y.id]});
+  if(!x.card&&!y.card&&x.d!=y.d&&x.a==y.a&&x.a>0&&Math.abs(dy(x.date)-dy(y.date))<=3)C.push({k:'p|'+x.id+'|'+y.id,t:'p',a:x,b:y,ex:[x.id,y.id],same:x.f.acct==y.f.acct})}
+ const X=new Set(),Cd=[];
+ const G={};F.forEach(f=>{if(f.type=='card'&&f.ready){const k=gk(f);(G[k]=G[k]||{nm:f.grp||f.acct,pm:/^\d{4}-\d{2}$/.test(f.pm||'')?f.pm:'',ns:[]}).ns.push(f.acct)}});
+ Object.entries(G).forEach(([k,g])=>{const rs=V.filter(r=>r.card&&gk(r.f)==k),T=rs.reduce((s,r)=>s+(r.d=='out'?r.a:-r.a),0);Cd.push({k,nm:g.nm,pm:g.pm,names:g.ns,n:rs.length,T,m:B.filter(r=>r.d=='out'&&T>0&&r.a==T)})});
+ Object.values(LK).forEach(id=>{if(by[id])X.add(id)});
+ C.forEach(c=>{if(AP[c.k]){if(c.ex.some(id=>X.has(id)))c.cf=1;else c.ex.forEach(id=>X.add(id))}});
+ const inc=[],pend=[],bad=live.filter(r=>!r.ok),M={};
+ V.forEach(r=>{if(X.has(r.id))return;let mo;
+  if(r.card){const l=by[LK[gk(r.f)]],pm=/^\d{4}-\d{2}$/.test(r.f.pm||'')?r.f.pm:'';if(!l&&!pm){pend.push(r);return}mo=pm||l.date.slice(0,7);r.exp=r.d=='out'?r.a:-r.a;r.inc=0}
+  else{mo=r.date.slice(0,7);r.inc=r.d=='in'?r.a:0;r.exp=r.d=='out'?r.a:0}
+  r.mo=mo;inc.push(r);const m=M[mo]=M[mo]||{i:0,e:0};m.i+=r.inc;m.e+=r.exp});
+ return{all,live,V,B,by,C,Cd,X,inc,pend,bad,M}}
+const rt=r=>`${r.date} ${E(r.f.acct)} ${E(r.name)} <b>${r.d=='in'?'入金':'出金'}${Y(r.a)}円</b>`,
+ opt=(v,t,s)=>`<option value="${E(v)}"${String(s)==String(v)?' selected':''}>${E(t)}</option>`;
+function pv(f,i){const sm=`<summary>プレビュー（見出し行：${f.hd?(f.hi+1)+'行目':'なし'}${f.hr==null?'・自動':''}）</summary>`;
+ if(!f.pv)return`<details data-pv="${i}">${sm}</details>`;
+ const nc=Array.from({length:f.nc},(_,k)=>k),cd=f.type=='card';
+ const raw=f.R.map((r,k)=>`<tr data-a="hr" data-i="${i}" data-k="${k}" style="cursor:pointer" class="${f.hd&&k==f.hi?'s':f.hd&&k<f.hi?'x':''}"><td>${k+1}</td>${nc.map(j=>`<td>${E(r[j]??'')}</td>`).join('')}</tr>`).join('');
+ const res=f.ready?f.rows.map(r=>{const w=[!r.date&&'日付',r.a==null&&'金額',!r.d&&'入出金'].filter(Boolean).join('・');return`<tr><td>${r.ln}</td><td class="${r.date?'':'r'}">${r.date||'×'}</td><td class="n">${r.d=='in'&&r.a!=null?Y(r.a):''}</td><td class="n">${r.d=='out'&&r.a!=null?Y(r.a):''}</td><td>${E(r.name)}</td><td class="r">${w?'要確認：'+w:''}</td></tr>`}).join(''):'';
+ return`<details data-pv="${i}" open>${sm}<div class="m">行をクリックすると、その行を見出し行にします（上の行は読み飛ばします）。空の行は数えません。 <button data-a="hr" data-i="${i}" data-k="-1">見出しなし</button> <button data-a="hra" data-i="${i}">自動に戻す</button></div>
+<div class="b" style="max-height:260px;overflow:auto"><table><tr><th>行</th>${nc.map(k=>`<th>列${k+1}</th>`).join('')}</tr>${raw}</table></div>
+<div class="m">読み取った結果（${f.ready?f.rows.length+'行':'列の指定が未完了'}）${cd?'　カードは、出金＝利用、入金＝返金です':''}</div>
+<div class="b" style="max-height:260px;overflow:auto"><table><tr><th>行</th><th>日付</th><th class="n">入金</th><th class="n">出金</th><th>名前</th><th>状態</th></tr>${res}</table></div></details>`}
+function fpanel(f,i){
+ const lab=k=>`列${k+1} ${f.hd?(f.R[f.hi][k]||''):''} 例:${f.D[0]?.[k]??''}`.slice(0,30),
+  cs=key=>`<select data-f="${i}" data-s="c.${key}">${opt('','(なし)',f.c[key])}${/\+/.test(f.c[key])?opt(f.c[key],f.c[key].split('+').map(k=>'列'+(+k+1)).join('＋'),f.c[key]):''}${Array.from({length:f.nc},(_,k)=>opt(k,lab(k),f.c[key])).join('')}</select>`,
+  at=s=>`data-f="${i}" data-s="${s}"`;
+ return`<div class="b"><b>${E(f.name)}</b> <span class="m">${f.rows.length}行</span> ${f.err?`<span class="r">${f.err}</span>`:''}
+<div class="g"><label>登録済みの形式 <select ${at('pid')}>${opt('','（手動で指定）',f.pid)}${PR.map(p=>opt(p.id,p.id,f.pid)).join('')}</select></label>${f.pid?`<button data-a="delfmt" data-id="${E(f.pid)}">この形式を削除</button>`:PR.length?'<span class="m">ファイル名から判定できませんでした。一覧から選ぶか、手動で指定してください。</span>':'<span class="m">列を指定したあと「この形式を保存」を押すと、次回から自動で当てはめます。</span>'}</div>${f.msg?`<div class="m">${E(f.msg)}</div>`:''}${f.warn?`<div class="w">${E(f.warn)}</div>`:''}
+<div class="g"><label>種類 <select ${at('type')}>${opt('bank','銀行',f.type)}${opt('card','クレジットカード',f.type)}</select></label>
+<label>名前 <input ${at('acct')} value="${E(f.acct)}" size="12"></label>${f.type=='card'?`<label>引き落とし名 <input ${at('grp')} value="${E(f.grp||f.acct)}" size="18" title="同じ名前のカードは、利用合計を足して、銀行の引き落としと比べます"></label><label>引き落とし月 <input type="month" ${at('pm')} value="${E(f.pm||'')}" title="この月の支出として集計します。同じ引き落とし名・同じ月のカードは合算します"></label>`:''}
+<label>文字コード <select ${at('enc')}>${['auto','utf-8','shift_jis','euc-jp'].map(v=>opt(v,v=='auto'?'自動':v,f.enc)).join('')}</select></label>
+<label>年なし日付の年 <input type="number" ${at('year')} value="${f.year}" style="width:5em"></label></div>
+<div class="g"><label>金額の形式 <select ${at('mode')}>${opt('AB','入金の列と出金の列が別',f.mode)}${opt('S','1列（マイナスあり）',f.mode)}${opt('D','1列＋入出金の区分の列',f.mode)}</select></label>
+${f.mode=='S'?`<label><input type="checkbox" ${at('flip')}${f.flip?' checked':''}> プラスの金額を出金（支出）として扱う</label>`:''}</div>
+<div class="g"><label>日付 ${cs('date')}</label><label>振込先・振込元 ${cs('name')}</label>${f.mode=='AB'?`<label>入金 ${cs('in')}</label><label>出金 ${cs('out')}</label>`:`<label>金額 ${cs('amt')}</label>`+(f.mode=='D'?`<label>入出金の区分 ${cs('dir')}</label>`:'')}</div>
+${f.ready?`<div class="g"><button data-a="savefmt" data-i="${i}">この形式を保存</button><span class="m">名前と列の指定だけを、このブラウザに保存します（CSVの内容は保存しません）</span></div>`:'<div class="w">日付と金額の列を指定してください。</div>'}${pv(f,i)}</div>`}
+function render(){
+ $('#files').innerHTML=F.map(fpanel).join('');
+ const S=calc();let h=`<h2>2. 要確認の行（${S.bad.length}件）</h2>`;
+ h+=S.bad.length?`<p class="m">直すと合計に入ります。カードの「出金」は利用（支出）です。</p><table><tr><th>ファイル・行</th><th>日付</th><th>金額</th><th>入出金</th><th>名前</th><th></th></tr>${S.bad.map(r=>`<tr><td>${E(r.f.acct)} ${r.ln}行</td>
+<td><input data-e="date" data-id="${r.id}" value="${E(r.date||'')}" placeholder="2026-10-19" size="11"></td>
+<td><input data-e="a" data-id="${r.id}" value="${r.a??''}" size="9"></td>
+<td><select data-e="d" data-id="${r.id}">${opt('','選択',r.d||'')}${opt('in','入金',r.d)}${opt('out','出金',r.d)}</select></td>
+<td><input data-e="name" data-id="${r.id}" value="${E(r.name)}" size="16"></td>
+<td><button data-a="ig" data-id="${r.id}">この行を無視する</button></td></tr>`).join('')}</table>`:'<p class="m">なし</p>';
+ h+=`<h2>3. 相殺・重複の候補</h2><p class="m">「合計から除く」を選んだものだけが、合計から除かれます。選ばなかった行は、そのまま合計に入ります。</p>`;
+ S.Cd.forEach(c=>{const l=S.by[LK[c.k]],g=E(c.k);h+=`<div class="b"><b>カード「${c.names.map(E).join('・')}」</b>（引き落とし名：${E(c.nm)}${c.pm?'、引き落とし月：'+c.pm:''}）利用合計 ${Y(c.T)}円（${c.n}件、返金を引いた額）<br>`;
+  if(l)h+=`✔ この出金を合計から除いています：${rt(l)}${l.a!=c.T?` <span class="r">（利用合計と${Y(Math.abs(l.a-c.T))}円違います）</span>`:''} ${c.pm&&l.date.slice(0,7)!=c.pm?'<br><span class="r">入力した引き落とし月と、選んだ出金の月が違います。入力した月で集計します。</span>':''} <button data-a="unlk" data-g="${g}">除くのをやめる</button>`;
+  else{h+=c.pm?(c.m.length?`<div class="w">引き落とし月 ${c.pm} で集計しています。銀行側に同じ金額の出金があります。「合計から除く」を選ばないと、二重に数えます。</div>`:`<div class="m">引き落とし月 ${c.pm} で集計しています。</div>`):'';h+=c.m.length?c.m.map(m=>{const k='c|'+c.k+'|'+m.id,r=RJ[k];return`<div class="${r?'x':''}">候補：${rt(m)} ${r?`そのまま合計に入れています <button data-a="rj" data-k="${E(k)}">もう一度候補にする</button>`:`<button data-a="lk" data-g="${g}" data-id="${m.id}">合計から除く</button> <button data-a="rj" data-k="${E(k)}">そのまま合計に入れる</button>`}</div>`}).join(''):'<div class="m">同じ金額の出金は見つかりません。</div>';
+   h+=`<div class="m">「合計から除く」を選ぶと、その出金は合計から除かれ、カードの利用明細が、その引き落とし日の月に入ります。</div><div>金額が合わない場合：<select data-a="sel" data-g="${g}">${opt('','（銀行の出金を選ぶ）','')}${S.B.filter(r=>r.d=='out'&&!S.X.has(r.id)).map(r=>opt(r.id,`${r.date} ${r.f.acct} ${r.name} ${Y(r.a)}円`,'')).join('')}</select></div>`}
+  h+='</div>'});
+ h+=S.C.length?`<table><tr><th>種類</th><th>内容</th><th></th></tr>${S.C.map(c=>{const a=AP[c.k],r=RJ[c.k],ty=CT[c.k]||'m';return`<tr class="${r?'x':''}"><td>${c.t=='d'?'重複':c.same?'キャッシュバック':`<select data-a="ct" data-k="${c.k}">${opt('m','自己資金の移動',ty)}${opt('c','キャッシュバック',ty)}</select>`}</td><td>${rt(c.a)}<br>${rt(c.b)}${c.t=='d'?'<br><span class="m">「合計から除く」を選ぶと、下の行だけを除きます</span>':''}${c.cf?'<br><span class="r">ほかの「合計から除く」と行が重なっているため反映されません</span>':''}</td><td>${a?`✔ 合計から除いています <button data-a="ap" data-k="${c.k}">除くのをやめる</button>`:r?`そのまま合計に入れています <button data-a="rj" data-k="${c.k}">もう一度候補にする</button>`:`<button data-a="ap" data-k="${c.k}">合計から除く</button> <button data-a="rj" data-k="${c.k}">そのまま合計に入れる</button>`}</td></tr>`}).join('')}</table>`:'<p class="m">移動・キャッシュバック・重複の候補はありません。</p>';
+ const ms=Object.keys(S.M).sort();if(!S.M[MON])MON=ms[ms.length-1]||'';
+ const nb=S.bad.length+S.pend.length,ab=[...S.bad,...S.pend].reduce((s,r)=>s+(r.a||0),0);
+ h+=`<h2>4. 月ごとの集計</h2>`+(nb?`<div class="w">合計に入っていない行が${nb}件（${Y(ab)}円分）あります。</div>`:'');
+ h+=ms.length?`<table><tr><th>月（クリックで明細）</th><th class="n">入金合計</th><th class="n">支出合計</th><th class="n">収支</th></tr>${ms.map(m=>{const t=S.M[m];return`<tr data-mon="${m}" class="${m==MON?'s':''}"><td>${m}</td><td class="n">${Y(t.i)}</td><td class="n">${Y(t.e)}</td><td class="n">${Y(t.i-t.e)}</td></tr>`}).join('')}</table>`:'<p class="m">集計できるデータがありません。</p>';
+ if(S.pend.length){const g={};S.pend.forEach(r=>(g[r.fi]=g[r.fi]||[]).push(r));h+=`<h3>月が確定していない分（引き落とし月が未入力で、引き落としも未確定のカード明細）</h3>`+Object.entries(g).map(([i,rs])=>`<details><summary>カード「${E(F[i].acct)}」 ${rs.length}件 / ${Y(rs.reduce((s,r)=>s+(r.d=='out'?r.a:-r.a),0))}円</summary>${rs.map(r=>`<div>${r.date} ${E(r.name)} ${r.d=='out'?'':'（返金）'}${Y(r.a)}円</div>`).join('')}</details>`).join('')}
+ if(MON){const rs=S.inc.filter(r=>r.mo==MON).sort((a,b)=>a.date.localeCompare(b.date));h+=`<h3>${MON} の明細（${rs.length}件）</h3><table><tr><th>日付</th><th class="n">入金</th><th class="n">支出</th><th>振込先・振込元</th><th>口座</th></tr>${rs.map(r=>`<tr><td>${r.date}</td><td class="n">${r.inc?Y(r.inc):''}</td><td class="n">${r.exp?Y(r.exp):''}</td><td>${E(r.name)}</td><td>${E(r.f.acct)}${r.card?' <span class="m">（カード利用日）</span>':''}</td></tr>`).join('')}</table>`}
+ const ig=S.all.filter(r=>r.ig);if(ig.length)h+=`<h3>無視した行</h3>`+ig.map(r=>`<div class="m">${E(r.f.acct)} ${r.ln}行 ${r.date||''} ${E(r.name)} ${r.a??''} <button data-a="uig" data-id="${r.id}">戻す</button></div>`).join('');
+ h+=`<h2>5. 保存する</h2><p class="m">相殺した行と無視した行は出力されません。「要確認」のまま残った行は明細に含まれます。</p><button data-a="ex1">明細CSV</button> <button data-a="ex2">月ごとの合計CSV</button><div id="out"></div><h2>6. 保存した形式（${PR.length}件）</h2>${PR.length?`<table><tr><th>名前</th><th>種類</th><th>見出し行</th><th></th></tr>${PR.map(p=>`<tr><td>${E(p.id)}</td><td>${p.type=='card'?'カード':'銀行'}</td><td>${p.h?p.h+'行目':'なし'}</td><td><button data-a="delfmt" data-id="${E(p.id)}">削除</button></td></tr>`).join('')}</table>`:'<p class="m">まだありません。列を指定したあと「この形式を保存」を押すと、ここに追加されます。</p>'}`;
+ $('#app').innerHTML=h}
+const q=v=>{v=String(v??'');return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function dl(n,rows){const t=rows.map(r=>r.map(q).join(',')).join('\r\n');
+ try{const u=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download=n;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},1000)}catch(_){}
+ $('#out').innerHTML=`<p class="m">${E(n)}：ダウンロードできない場合は、下の文字をすべてコピーし、メモ帳などに貼り付けて、名前に「.csv」をつけて保存してください。</p><textarea readonly rows="8" style="width:100%" onfocus="this.select()">${E(t)}</textarea>`}
+function exp(k){const S=calc();
+ if(k==1){const rs=S.live.filter(r=>!S.X.has(r.id)).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'));
+  dl('明細.csv',[['日付','入金','出金','振込先・振込元','口座名','元のファイル名'],...rs.map(r=>{let i='',o='';if(r.a!=null&&r.d){if(r.card)o=r.d=='out'?r.a:-r.a;else if(r.d=='in')i=r.a;else o=r.a}return[r.date||'',i,o,r.name,r.f.acct,r.f.name]})])}
+ else dl('月ごとの合計.csv',[['月','入金合計','支出合計','収支'],...Object.keys(S.M).sort().map(m=>[m,S.M[m].i,S.M[m].e,S.M[m].i-S.M[m].e])])}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a],[data-mon]');if(!t)return;const d=t.dataset,a=d.a,k=d.k,id=d.id,i=d.i;
+ if(d.mon)MON=d.mon;else if(a=='ap')AP[k]?delete AP[k]:AP[k]=1;else if(a=='rj')RJ[k]?delete RJ[k]:RJ[k]=1;
+ else if(a=='lk')LK[d.g]=id;else if(a=='unlk')delete LK[d.g];
+ else if(a=='ig')(ED[id]=ED[id]||{}).ig=1;else if(a=='uig')delete ED[id].ig;
+ else if(a=='hr'||a=='hra'){F[i].hr=a=='hra'?null:+k;F[i].warn='';build(+i)}
+ else if(a=='savefmt'){const f=F[i],nm=prompt('この形式の名前（銀行名・カード名）を入力してください。\nファイル名にこの名前が入っていると、次回から自動で当てはめます。',f.acct);if(nm===null)return;const n=nm.trim();if(!n)return alert('名前を入力してください。');if(PR.some(x=>x.id==n)&&!confirm('「'+n+'」はすでに保存されています。上書きしますか？'))return;saveFmt(+i,n)}
+ else if(a=='delfmt'){if(!confirm('保存した形式「'+id+'」を削除します。よろしいですか？'))return;delFmt(id)}
+ else if(a=='ex1')return exp(1);else if(a=='ex2')return exp(2);else return;
+ render()});
+document.addEventListener('toggle',e=>{const t=e.target,x=t.dataset&&t.dataset.pv;if(x!==undefined&&x!==''){const f=F[+x];if(f&&f.pv!=t.open){f.pv=t.open;render()}}},true);
+document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
+ if(d.f!==undefined){const i=+d.f,f=F[i],s=d.s,v=t.type=='checkbox'?t.checked:t.value;
+  if(s=='pid'){f.pid=v;f.warn='';if(v)applyP(i,PR.find(p=>p.id==v))}else if(s.startsWith('c.'))f.c[s.slice(2)]=v;else if(s=='year')f.year=+v||new Date().getFullYear();else f[s]=v;
+  if(s=='type')f.flip=v=='card';build(i)}
+ else if(d.e){const ed=ED[d.id]=ED[d.id]||{},v=t.value;
+  if(d.e=='date'){const p=pd(v),f=F[+d.id.split(':')[0]],x=p.v||(p.ny?ok(+f.year,p.ny[0],p.ny[1]):null);if(!x&&v.trim()){alert('日付を読み取れません。例：2026-10-19');return}ed.date=x}
+  else if(d.e=='a'){const n=pa(v);ed.a=n==null?null:Math.abs(n)}
+  else if(d.e=='d')ed.d=v||null;else ed.name=v}
+ else if(d.a=='sel'){if(t.value)LK[d.g]=t.value}
+ else if(d.a=='ct')CT[d.k]=t.value;else return;
+ render()});
+$('#reset').addEventListener('click',()=>{if(F.length&&!confirm('読み込んだCSVの内容を、すべて消して、はじめからにします。保存した形式は消えません。よろしいですか？'))return;resetAll()});
+$('#fi').addEventListener('change',async e=>{for(const file of e.target.files)addFile(file.name,await file.arrayBuffer());e.target.value='';render()});
+render();
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+</script>
+<script data-goatcounter="https://wel-be.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body></html>
