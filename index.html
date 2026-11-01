@@ -9,7 +9,7 @@ header{background:var(--g);color:#fff;border-radius:0 0 20px 20px;padding:16px 0
 .in,.wrap{max-width:720px;margin:0 auto;padding:0 14px}.wrap{padding-bottom:36px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{display:flex;align-items:center;gap:8px}
 h1{font-size:26px;margin:0}.sub{margin:6px 0 4px;font-size:16px}
-.priv{margin:2px 0;font-size:13px;display:flex;gap:6px;align-items:flex-start}.priv .ic{width:16px;height:16px;margin-top:3px}.priv2{margin:2px 0 0;font-size:12px;opacity:.88}
+.priv{margin:2px 0;font-size:13px;display:flex;gap:6px;align-items:flex-start}.priv .ic{width:16px;height:16px;margin-top:3px}
 .ic{width:20px;height:20px;flex:none}h2{font-size:17px;margin:0 0 10px;display:flex;align-items:center;gap:8px}h3{font-size:15px;margin:16px 0 4px}
 .card{background:#fff;border:1px solid var(--l);border-radius:16px;box-shadow:0 1px 4px #0000000f;padding:16px;margin:12px 0}
 .st{display:flex;gap:12px;align-items:center;background:var(--gl)}.stic{color:var(--gd)}.stic .ic{width:32px;height:32px}
@@ -42,8 +42,7 @@ a{color:var(--gd)}.foot{text-align:center;margin:20px 0 4px;font-size:13px}.foot
 </style></head><body>
 <header><div class="in"><div class="top"><div class="brand"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z"/><path d="M8 20v-5M12 20v-8M16 20v-3"/></svg><h1>csvSync</h1></div><button id="reset" class="ghost"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.5-5.8M20 4v5h-5"/></svg>はじめから</button></div>
 <p class="sub">複数の明細をまとめて、家計簿に。</p>
-<p class="priv"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><span>CSVの内容は、このブラウザ内で処理され、外部に送信されません（閉じると消えます）。</span></p>
-<p class="priv2">アクセス数の集計のため、ページを開いたことだけが GoatCounter に送られます。保存されるのは、「この形式を保存」で登録した名前と列の指定だけです。</p></div></header>
+<p class="priv"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><span>CSVの内容は、このブラウザ内で処理され、外部に送信されません（閉じると消えます）。</span></p></div></header>
 <div class="wrap"><section class="card st" id="status"></section>
 <section class="card" id="c1"><h2><span class="num">1</span><span id="c1i"></span>CSVを読み込む</h2>
 <input type="file" id="fi" hidden multiple accept=".csv,.txt,text/csv,text/plain,application/vnd.ms-excel">
