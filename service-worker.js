@@ -1,11 +1,16 @@
 // アプリ本体のファイルだけを保存します。CSVなどの利用者のデータは扱いません。
 // index.html などを更新したら、VERSION の数字を上げてください。
-const VERSION = 3;
+const VERSION = 4;
 const CACHE = 'kakeibo-v' + VERSION;
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'];
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
+// 1つのファイルが取得できなくても、全体の準備は止めません。
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => Promise.all(ASSETS.map(a => c.add(a).catch(() => {}))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {

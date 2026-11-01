@@ -1,0 +1,16 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>csvSync インストール診断</title>
+<style>body{font:15px/1.7 system-ui,sans-serif;max-width:640px;margin:0 auto;padding:16px;color:#2f3432}h1{font-size:19px}li{margin:6px 0}.ok{color:#2e7d5b}.ng{color:#b15c1e}button{font:inherit;padding:10px 20px;border-radius:999px;border:0;background:#789486;color:#fff;margin-top:12px}img{width:48px;height:48px;vertical-align:middle;margin-right:8px}</style></head><body>
+<h1>csvSync インストール診断</h1><p>このページは、診断のためのものです。確認が終わったら、削除してかまいません。</p><ul id="r"></ul><div id="btn"></div>
+<script>
+const L=document.getElementById('r'),add=(ok,t)=>{const li=document.createElement('li');li.className=ok?'ok':'ng';li.textContent=(ok?'✔ ':'✖ ')+t;L.appendChild(li);return li};
+let dp=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;add(true,'Chromeが、インストールを許可しています。');const b=document.createElement('button');b.textContent='アプリをインストール';b.onclick=()=>dp.prompt();document.getElementById('btn').appendChild(b)});
+(async()=>{
+ add(location.protocol==='https:'||location.hostname==='localhost','アドレスが https:// で始まっている（現在：'+location.protocol+'//'+location.host+'）');
+ add(matchMedia('(display-mode: standalone)').matches?false:true,'ブラウザで開いている（インストール済みのアプリの中ではない）');
+ try{const r=await fetch('manifest.json');add(r.ok,'manifest.json を読み込めた（'+r.status+'）');const m=await r.json();add(!!m.name,'アプリ名：'+m.name);
+  for(const i of m.icons||[]){await new Promise(res=>{const im=new Image();im.onload=()=>{const li=add(im.naturalWidth>0,'アイコン '+i.src+'（'+im.naturalWidth+'×'+im.naturalHeight+'）');li.prepend(im);res()};im.onerror=()=>{add(false,'アイコン '+i.src+' を読み込めない（ファイルがアップロードされていない可能性があります）');res()};im.src=i.src})}
+ }catch(e){add(false,'manifest.json を読み込めない（ファイルがアップロードされていない可能性があります）')}
+ try{const g=await navigator.serviceWorker.register('service-worker.js');add(true,'service-worker.js を登録できた');await navigator.serviceWorker.ready;add(true,'service worker が動いている')}catch(e){add(false,'service-worker.js を登録できない：'+e.message)}
+ setTimeout(()=>{if(!dp)add(false,'Chromeから、インストールの許可の連絡は、まだ届いていません（すでにインストール済みの場合や、一度インストールの案内を閉じた場合も、このように表示されます。上に✖がなければ、Chromeの「︙」メニューの「アプリをインストール」を試してください）')},4000);
+})();
+</script></body></html>
