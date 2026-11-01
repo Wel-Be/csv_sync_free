@@ -1,6 +1,6 @@
 // アプリ本体のファイルだけを保存します。CSVなどの利用者のデータは扱いません。
 // index.html などを更新したら、VERSION の数字を上げてください。
-const VERSION = 4;
+const VERSION = 5;
 const CACHE = 'kakeibo-v' + VERSION;
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 

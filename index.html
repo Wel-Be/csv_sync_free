@@ -7,7 +7,7 @@
 body{margin:0;background:var(--bg);color:var(--t);font:15px/1.65 system-ui,"Hiragino Sans","Yu Gothic",sans-serif;-webkit-text-size-adjust:100%}
 header{background:var(--g);color:#fff;border-radius:0 0 20px 20px;padding:16px 0 14px}
 .in,.wrap{max-width:720px;margin:0 auto;padding:0 14px}.wrap{padding-bottom:36px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{display:flex;align-items:center;gap:8px}
+.ver{font-size:12px;opacity:.88;align-self:flex-end;margin-bottom:5px}.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{display:flex;align-items:center;gap:8px}
 h1{font-size:26px;margin:0}.sub{margin:6px 0 4px;font-size:16px}
 .priv{margin:2px 0;font-size:13px;display:flex;gap:6px;align-items:flex-start}.priv .ic{width:16px;height:16px;margin-top:3px}
 .ic{width:20px;height:20px;flex:none}h2{font-size:17px;margin:0 0 10px;display:flex;align-items:center;gap:8px}h3{font-size:15px;margin:16px 0 4px}
@@ -40,7 +40,7 @@ a{color:var(--gd)}.foot{text-align:center;margin:20px 0 4px;font-size:13px}.foot
 @media(max-width:700px){.g{flex-direction:column;gap:6px}.g label{display:flex;flex-direction:column;gap:2px}.g label:has(input[type=checkbox]){flex-direction:row;align-items:center}h1{font-size:23px}.tot b{font-size:15px}}
 @media(max-width:560px){.save{grid-template-columns:1fr}}
 </style></head><body>
-<header><div class="in"><div class="top"><div class="brand"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z"/><path d="M8 20v-5M12 20v-8M16 20v-3"/></svg><h1>csvSync</h1></div><button id="reset" class="ghost"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.5-5.8M20 4v5h-5"/></svg>はじめから</button></div>
+<header><div class="in"><div class="top"><div class="brand"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z"/><path d="M8 20v-5M12 20v-8M16 20v-3"/></svg><h1>csvSync</h1><span class="ver" id="ver"></span></div><button id="reset" class="ghost"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.5-5.8M20 4v5h-5"/></svg>はじめから</button></div>
 <p class="sub">複数の明細をまとめて、家計簿に。</p>
 <p class="priv"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><span>CSVの内容は、このブラウザ内で処理され、外部に送信されません（閉じると消えます）。</span></p></div></header>
 <div class="wrap"><section class="card st" id="status"></section>
@@ -145,6 +145,8 @@ function fpanel(f,i){
 ${f.mode=='S'?`<label><input type="checkbox" ${at('flip')}${f.flip?' checked':''}> プラスの金額を出金（支出）として扱う</label>`:''}</div>
 <div class="g"><label>日付 ${cs('date')}</label><label>振込先・振込元 ${cs('name')}</label><label>詳細（任意） ${cs('det')}</label>${f.mode=='AB'?`<label>入金 ${cs('in')}</label><label>出金 ${cs('out')}</label>`:`<label>金額 ${cs('amt')}</label>`+(f.mode=='D'?`<label>入出金の区分 ${cs('dir')}</label>`:'')}</div>
 ${f.ready?`<div class="g"><button class="btn sm" data-a="savefmt" data-i="${i}">この形式を保存</button><span class="m">名前と列の指定だけを、このブラウザに保存します（CSVの内容は保存しません）</span></div>`:'<div class="w">日付と金額の列を指定してください。</div>'}${pv(f,i)}</div>`}
+const APP_VER='1.0.0（2026-11-01）';
+$('#ver').textContent='ver '+APP_VER;
 const IC={file:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 12h5M9.5 16h5"/>',warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',bal:'<path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-2.5 6a3 3 0 005 0zM19 8l-2.5 6a3 3 0 005 0z"/>',chart:'<path d="M5 20V11M12 20V5M19 20v-7"/>',dl:'<path d="M12 4v11M7.5 11L12 15.5 16.5 11M5 20h14"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',folder:'<path d="M3 7h6l2 2h10v10H3z"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'};
 const ic=k=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
 let OP={};
